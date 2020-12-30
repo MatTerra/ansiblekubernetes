@@ -1,0 +1,21 @@
+---
+  - name: Disable swap
+    shell:
+      cmd: sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab && swapoff -a
+
+  - name: Set sysctl variables
+    ansible.posix.sysctl:
+      name: "{{ item }}"
+      sysctl_file: /etc/sysctl.d/kubernetes.conf
+      value: 1
+      state: present
+    loop: "{{ sysctl_variables }}"
+  
+  - name: Enable Kubelet
+    service:
+      enabled: True
+      name: kubelet
+  
+  - name: Pull container images
+    shell:
+      cmd: kubeadm config images pull

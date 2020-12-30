@@ -1,0 +1,34 @@
+---
+  - name: Stopping containerd
+    service:
+      enabled: False
+      name: containerd
+      state: stopped
+
+  - name: Remove containerd
+    apt:
+      name: containerd.io
+      state: absent
+      autoremove: yes
+      purge: yes
+
+  - name: Remove module loading persistence
+    file:
+      path: /etc/modules-load.d/containerd.conf
+      state: absent
+
+  - name: Reload sysctl configs
+    shell:
+      cmd:
+        sysctl --system
+
+  - name: Remove conteinerd apt repositories
+    apt_repository:
+      filename:  containerd
+      state: absent
+      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+  
+  - name: Remove containerd directory
+    file:
+      path: /etc/containerd
+      state: absent

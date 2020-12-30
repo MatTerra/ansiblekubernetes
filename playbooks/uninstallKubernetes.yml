@@ -1,0 +1,40 @@
+---
+- name: Uninstall Kubernetes
+  gather_facts: no
+  hosts: kubernetes_servers
+  vars:
+    kubernetes_packages:
+    - kubelet
+    - kubeadm
+    - kubectl
+    kernel_modules:
+    - overlay
+    - br_netfilter
+    sysctl_variables:
+    - net.bridge.bridge-nf-call-ip6tables
+    - net.bridge.bridge-nf-call-iptables
+    - net.ipv4.ip_forward
+  tasks:
+  - name: Reset kubernetes
+    shell:
+      cmd: kubeadm reset -f
+  
+  - name: Disable Kubelet
+    service:
+      enabled: False
+      name: kubelet
+      state: stopped
+
+  - name: Remove CNI configuration
+    file:
+      path: /etc/cni/net.d
+      state: absent
+
+  - name: Remove Kubernetes Packages
+    include: tasks/removeKubernetesPackages.yml
+
+  - name: Remove and Unconfigure containerd
+    include: tasks/removeAndUnconfigureContainerd.yml
+
+
+

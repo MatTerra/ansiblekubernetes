@@ -1,0 +1,16 @@
+---
+  - name: "Cluster token"
+    shell: kubeadm token create --ttl 5m
+    register: token
+
+  - name: "CA Hash"
+    shell: openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
+    register: ca_hash
+
+  - name: Token
+    debug:
+      msg: Token is {{ hostvars[inventory_hostname]['token']['stdout'] }}
+
+  - name: CA Hash
+    debug:
+      msg: CA Hash is {{ hostvars[inventory_hostname]['ca_hash']['stdout'] }}

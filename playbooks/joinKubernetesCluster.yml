@@ -1,0 +1,18 @@
+---
+- name: Get Token
+  gather_facts: no
+  hosts: kubernetes_master
+  tasks:
+  - name: Get Token and CA Hash
+    include: tasks/getClusterTokenAndHash.yml
+    
+- name: Join Cluster
+  gather_facts: no
+  hosts: kubernetes_nodes
+  vars:
+    api_port: 6443
+  tasks:
+  - name: Join Cluster on {{ kubernetes_master }}
+    include: tasks/joinCluster.yml
+  
+  

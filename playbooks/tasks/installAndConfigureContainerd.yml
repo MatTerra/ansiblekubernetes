@@ -1,0 +1,57 @@
+---
+  - name: Load Kernel Modules
+    community.general.modprobe:
+      name: "{{ item }}"
+      state: present
+    loop: "{{ kernel_modules }}"
+  - name: Make module loading persistent
+    shell:
+      cmd: |
+        tee /etc/modules-load.d/containerd.conf <<EOF
+        overlay
+        br_netfilter
+        EOF
+  - name: Reload sysctl configs
+    shell:
+      cmd:
+        sysctl --system
+  - name: Install containerd dependencies
+    apt:
+      update_cache: yes
+      state: present
+      name:
+      - curl
+      - gnupg2
+      - software-properties-common
+      - apt-transport-https
+      - ca-certificates
+  - name: Get containerd GPG keys
+    get_url:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      dest: /tmp/containerd.gpg
+  - name: Add containerd GPG keys
+    apt_key:
+      file: /tmp/containerd.gpg
+      state: present
+  - name: Add conteinerd apt repositories
+    apt_repository:
+      filename:  containerd
+      state: present
+      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+  - name: Install containerd
+    apt:
+      update_cache: yes
+      name: containerd.io
+      state: present
+  - name: Create containerd directory
+    file:
+      path: /etc/containerd
+      state: directory
+  - name: Configure containerd
+    shell:
+      cmd: containerd config default > /etc/containerd/config.toml
+  - name: Restart containerd
+    service:
+      enabled: True
+      name: containerd
+      state: restarted

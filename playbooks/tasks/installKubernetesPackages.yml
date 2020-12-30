@@ -1,0 +1,32 @@
+---
+  - name: Get Google GPG keys
+    get_url:
+      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      dest: /tmp/google.gpg
+  - name: Add Google GPG keys
+    apt_key:
+      file: /tmp/google.gpg
+      state: present
+  - name: Add Kubernetes apt repositories
+    apt_repository:
+      filename: kubernetes
+      state: present
+      repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+  - name: Install required packages
+    apt:
+      update_cache: yes
+      state: present
+      name: "{{ kubernetes_packages }}"
+  - name: Hold packages
+    dpkg_selections:
+      name: "{{ item }}"
+      selection: hold
+    loop: "{{ kubernetes_packages }}"
+  - name: Check versions
+    shell:
+      cmd: kubectl version --client && kubeadm version
+    register: version
+  - name: Print version
+    debug:
+      var: version.stdout
+      verbosity: 0

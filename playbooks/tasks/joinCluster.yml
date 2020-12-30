@@ -1,0 +1,6 @@
+---
+  - name: "Kubeadmn join"
+    shell: >
+      kubeadm join --token={{ hostvars[groups['kubernetes_master'][0]]['token']['stdout'] }}
+      --discovery-token-ca-cert-hash sha256:{{ hostvars[groups['kubernetes_master'][0]]['ca_hash']['stdout'] }}
+      {{ groups['kubernetes_master'][0] }}:{{ api_port }}

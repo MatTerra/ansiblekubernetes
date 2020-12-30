@@ -1,0 +1,30 @@
+---
+- import_playbook: installKubernetes.yml
+
+- import_playbook: setupKubernetesMaster.yml
+
+- import_playbook: joinKubernetesCluster.yml
+
+- name: Check nodes
+  gather_facts: no
+  hosts: kubernetes_master
+  tasks:
+  - name: Get Nodes
+    shell:
+      cmd: kubectl get nodes
+    register: nodes
+
+  - name: Show Nodes
+    debug:
+      var: nodes.stdout
+      verbosity: 0
+
+- name: Cleanup Installation
+  gather_facts: no
+  hosts: kubernetes_servers
+  tasks:
+  - name: Cleanup temp files
+    file:
+      path: "{{ item }}"
+      state: absent
+    loop: ["/etc/containerd/config.toml", "/tmp/google.gpg", "/tmp/containerd.gpg"]

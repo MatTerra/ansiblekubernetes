@@ -1,0 +1,30 @@
+---
+  - name: Unhold packages
+    dpkg_selections:
+      name: "{{ item }}"
+      selection: purge
+    loop: "{{ kubernetes_packages }}"
+  
+  - name: Remove kubernetes packages
+    apt:
+      update_cache: yes
+      state: absent
+      name: "{{ kubernetes_packages }}"
+      purge: yes
+      autoremove: yes
+
+  - name: Remove sysctl variables file
+    file:
+      path: /etc/sysctl.d/kubernetes.conf
+      state: absent
+
+  - name: Remove Kubernetes apt repositories
+    apt_repository:
+      filename: kubernetes
+      state: absent
+      repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+      
+  - name: Remove repo file
+    file:
+      path: /etc/apt/sources.list.d/kubernetes.list
+      state: absent

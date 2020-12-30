@@ -1,0 +1,30 @@
+---
+- name: Install Kubernetes on Servers
+  gather_facts: no
+  hosts: kubernetes_servers
+  vars:
+    kubernetes_packages:
+    - kubelet
+    - kubeadm
+    - kubectl
+    kernel_modules:
+    - overlay
+    - br_netfilter
+    sysctl_variables:
+    - net.bridge.bridge-nf-call-ip6tables
+    - net.bridge.bridge-nf-call-iptables
+    - net.ipv4.ip_forward
+  tasks:
+  - name: Upgrade apt packages
+    apt:
+      update_cache: yes
+      upgrade: yes
+
+  - name: Install Kubernetes Packages
+    include: tasks/installKubernetesPackages.yml
+
+  - name: Install and Configure containerd
+    include: tasks/installAndConfigureContainerd.yml
+
+  - name: Prepare Kubernetes
+    include: tasks/prepareForKubernetes.yml

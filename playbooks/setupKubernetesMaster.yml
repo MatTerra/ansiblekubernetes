@@ -1,0 +1,42 @@
+---
+- name: Start Kubernetes master node on Ubuntu
+  gather_facts: no
+  hosts: kubernetes_master
+  vars:
+    pod_cidr: 10.30.0.0/16
+  tasks:
+
+  - name: Setup kubernetes cluster
+    shell:
+      cmd: >
+        kubeadm init --pod-network-cidr={{ pod_cidr }} 
+        --control-plane-endpoint={{ inventory_hostname }} 
+        --cri-socket=/run/containerd/containerd.sock
+    register: install_result
+
+  - name: Show configuration output
+    debug:
+      var: install_result
+      verbosity: 0
+
+  - name: Install Calico on Cluster
+    include: tasks/installCalico.yml
+
+  - name: Create kube dir
+    file:
+      path: /root/.kube
+      state: directory
+  
+  - name: Copy config file
+    shell:
+      cmd: cp /etc/kubernetes/admin.conf /root/.kube/config
+
+  - name: Get Nodes
+    shell:
+      cmd: kubectl get nodes
+    register: nodes
+
+  - name: Show Nodes
+    debug:
+      var: nodes.stdout
+      verbosity: 0
