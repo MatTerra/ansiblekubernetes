@@ -1,0 +1,27 @@
+---
+  - name: Install Tigera Calico
+    shell:
+      cmd: kubectl --kubeconfig=/etc/kubernetes/admin.conf create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
+
+  - name: Get Calico conf
+    get_url:
+      url: https://docs.projectcalico.org/manifests/custom-resources.yaml
+      dest: /tmp/calico.yml
+
+  - name: Fix CIDR for Calico
+    replace:
+      regexp: '192.168.0.0/16'
+      replace: "{{ pod_cidr }}"
+      dest: /tmp/calico.yml
+
+  - name: Config Calico
+    shell:
+      cmd: kubectl --kubeconfig=/etc/kubernetes/admin.conf create -f /tmp/calico.yml
+
+  - name: Wait for Calico
+    wait_for:
+      timeout: 100
+
+  - name: Remove Node taints
+    shell:
+      cmd: kubectl --kubeconfig=/etc/kubernetes/admin.conf taint nodes --all node-role.kubernetes.io/master-

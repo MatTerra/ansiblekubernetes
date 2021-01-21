@@ -1,0 +1,21 @@
+---
+- name: Install MetalLB on Kubernetes Cluster
+  hosts: kubernetes_master
+  vars:
+    ip_range_start: 192.168.0.150
+    ip_range_end: 192.168.0.250
+  tasks:
+  - name: Apply manifests
+    shell:
+      cmd: kubectl apply -f {{ item }}
+    loop: [ "https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/namespace.yaml", "https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/metallb.yaml" ]
+  - name: Create memberlist
+    shell:
+      cmd: kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+  - name: Setup Layer 2 IP Range
+    template:
+      src: templates/configmetal.j2
+      dest: /tmp/configmetal.yml
+  - name: Apply configuration
+    shell:
+      cmd: kubectl apply -f /tmp/configmetal.yml
